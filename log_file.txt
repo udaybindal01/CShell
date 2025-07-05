@@ -1,0 +1,15 @@
+hop ..
+hop
+hop new
+ls
+hop joe
+hop ..
+hop ~
+hop
+hop ne
+hop new
+ls
+hop joe
+cd ..
+hop ..
+hop joe
