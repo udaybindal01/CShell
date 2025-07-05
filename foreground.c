@@ -2,23 +2,22 @@
 #include "input.h"
 #include "foreground.h"
 #include "log.h"
+#include "activity.h"
+#include "fgandbg.h"
+#include "signal.h"
+#include "globals.h"
+
+int g = 0;
 
 int bg_count = 0;
-typedef struct background_process
-{
-    pid_t pid;
-    char name[100];
-} BgProcess;
-
 BgProcess bg[10000];
-
-int is_foreground_process = 0;
+struct ProcessStatus Pro[1000000];
 
 void handle_sigchld(int sig)
 {
+    // printf("nyan %d\n",sig);
     int status;
     pid_t pid;
-
     if (is_foreground_process)
         return;
 
@@ -47,7 +46,6 @@ void handle_sigchld(int sig)
                 }
                 --bg_count;
                 --i;
-
             }
         }
 
@@ -58,16 +56,37 @@ void handle_sigchld(int sig)
 
 void setup_sigchld_handler()
 {
-    struct sigaction sa;
-    sa.sa_handler = &handle_sigchld;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
+    struct sigaction sa_chld;
+    sa_chld.sa_handler = handle_sigchld;
+    sigemptyset(&sa_chld.sa_mask);
+    sa_chld.sa_flags = SA_RESTART | SA_NOCLDSTOP;
 
-    if (sigaction(SIGCHLD, &sa, NULL) == -1)
+    if (sigaction(SIGCHLD, &sa_chld, NULL) == -1)
     {
-        perror("sigaction");
-        // _exit(1);
+        perror("sigaction SIGCHLD");
+        exit(1);
     }
+    // struct sigaction sa_int;
+    // sa_int.sa_handler = handle_sigint;
+    // sigemptyset(&sa_int.sa_mask);
+    // sa_int.sa_flags = 0;
+
+    // if (sigaction(SIGINT, &sa_int, NULL) == -1)
+    // {
+    //     perror("sigaction SIGINT");
+    //     exit(1);
+    // }
+
+    // struct sigaction sa_tstp;
+    // sa_tstp.sa_handler = handle_sigstp;
+    // sigemptyset(&sa_tstp.sa_mask);
+    // sa_tstp.sa_flags = 0;
+
+    // if (sigaction(SIGTSTP, &sa_tstp, NULL) == -1)
+    // {
+    //     perror("sigaction SIGTSTP");
+    //     exit(1);
+    // }
 }
 
 void check_background_processes()
@@ -115,12 +134,23 @@ void foreg(char *command, int flag)
     }
     else if (p == 0)
     {
-        char *args[] = {"sh", "-c", command, NULL};
+        if (flag == 1) setpgid(0, 0);
+
+        char *args[] = {"/bin/bash", "-c", command, NULL};
         execvp(args[0], args);
-        perror("Failed to execute execvp");
+        perror("execvp");
     }
     else
     {
+        fgpid = p;
+        Pro[fgpid].pid = fgpid;
+        g = p;
+        char *redir_pos = strpbrk(command, "><");
+        if (redir_pos != NULL)
+        {
+            *redir_pos = '\0';
+        }
+
         int i = 0;
         while (isspace(command[i]))
             i++;
@@ -134,20 +164,18 @@ void foreg(char *command, int flag)
 
         if (flag == 0)
         {
+            // printf("%d\n", p);
+            // get_process_status(fgpid);
+
+            Pro[fgpid].status = 0;
             is_foreground_process = 1;
             int status;
             start = time(NULL);
             waitpid(p, &status, 0);
             end = time(NULL);
-            // if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-            // {
-            //     add_to_log(store);
-            // }
-            // add_to_log(store);
             int rounded_time = (int)(end - start);
             if (rounded_time > 2)
             {
-                // printf("<%s@%s:%s %s : %ds> ", username, hostname, current_directory, process_name, rounded_time);
                 snprintf(process_name, sizeof(process_name), "%s : %ds", command, rounded_time);
                 time_flag = 1;
             }
@@ -156,19 +184,26 @@ void foreg(char *command, int flag)
                 time_flag = 0;
             }
             is_foreground_process = 0;
+            add_process_to_queue(p, command);
         }
         else
         {
+
+            // setpgid(0, 0);
+            Pro[fgpid].status = 1;
+            Pro[0].status = 1;
             int status;
             if (waitpid(p, &status, WNOHANG) == -1)
             {
                 printf("invalid command\n");
                 return;
             }
+            setpgid(p, p);
+            add_process_to_queue(p, command);
+            add_bg_process(p, command);
             printf("%d\n", p);
             bg[bg_count].pid = p;
             strcpy(bg[bg_count].name, process_name);
-            // add_to_log(store);
             bg_count++;
         }
     }

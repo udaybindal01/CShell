@@ -29,7 +29,7 @@ void seek_directory(const char *target, const char *dir)
     while ((files = readdir(di)) != NULL)
     {
         snprintf(path, strlen(dir) + 1 + strlen(files->d_name) + 1, "%s/%s", dir, files->d_name);
-
+        // printf("%s\n",path);
         if (stat(path, &statbuf) == -1)
         {
             perror("stat");
@@ -155,6 +155,12 @@ void seek(char *command)
     int pl = 0;
     d = 1, f = 1, e = 0;
 
+    char *redir_pos = strpbrk(command, "><");
+    if (redir_pos != NULL)
+    {
+        *redir_pos = '\0';  
+    }
+
     const char *delimiter = " ";
     char *saveptr;
     char *args = strtok_r(command, delimiter, &saveptr);
@@ -218,10 +224,16 @@ void seek(char *command)
 
         args = strtok_r(NULL, delimiter, &saveptr);
     }
-   if(strcmp(".",source) == 0|| strcmp("~",source) == 0 || strlen(source) == 0)
+   if(strcmp(".",source) == 0|| strcmp("~",source) == 0)
     {
         source = shell_home_directory;
         seek_directory(target,shell_home_directory);
+    }
+    else if(strlen(source) == 0)
+    {
+        source = ".";
+        seek_directory(target,source);
+
     }
     else if(strcmp("-",source) == 0)
     {

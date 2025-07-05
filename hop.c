@@ -46,6 +46,12 @@ int execute_hop(char *dir)
 void hop(char *command)
 {
 
+    char *redir_pos = strpbrk(command, "><");
+    if (redir_pos != NULL)
+    {
+        *redir_pos = '\0';  
+    }
+    
     const char *delimiter = " ";
     char *saveptr;
     char *args = strtok_r(command, delimiter, &saveptr);

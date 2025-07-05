@@ -9,7 +9,14 @@ This project implements a custom shell program with various commands that mimic 
 * `log`
 * `seek`
 * `proclore`
-* `Foreground and Background Process Handling` <br />
+* `Foreground and Background Process Handling`
+* `myshrc`
+* `activities`
+* `signals`
+* `fg and bg`
+* `Neonate`
+* `iMan` <br />
+
 3. Compilation and Execution
 
 ## Overview
@@ -119,7 +126,6 @@ The + signifies whether it is a foreground or background process.
 ###### Description:
 The shell supports managing both foreground and background processes.
 
-###### Usage:
 
 **Foreground Processes:** Standard command execution. The shell waits for the process to complete before accepting more commands.
 **Background Processes:** Commands followed by & are executed in the background. The shell continues accepting commands immediately.
@@ -128,6 +134,94 @@ The shell supports managing both foreground and background processes.
 
 The shell prints the PID of background processes and notifies the user when they finish.
 For processes running longer than 2 seconds, the shell prints the execution time upon completion.
+
+7. `myshrc`
+
+###### Description:
+.myshrc is a custom configuration file inspired by .bashrc. It allows users to define aliases and functions that enhance the command-line experience.
+
+###### Example Aliases::
+```
+reveall = reveal -l
+alias home = hop ~
+```
+
+
+8. `I/O Redirection`
+
+###### Description:
+
+`>`: Redirects standard output to a file (overwrites if the file exists).
+`>>`: Appends standard output to a file (creates the file if it doesn’t exist).
+`<`: Redirects input from a file to a command.
+
+9. `Pipe Support`
+
+###### Description:
+
+The shell supports an unlimited number of pipes to pass the output of one command as input to the next.
+
+```
+echo "Hello" | wc
+Error Handling: Prints "Invalid use of pipe" if there's nothing on either side of a pipe.
+```
+
+10. `Redirection with Pipes`
+
+###### Description:
+Redirection works in conjunction with pipes.
+
+###### Example:
+
+```
+cat < file.txt | wc | cat > result.txt
+```
+
+11. `Activities Command`
+
+###### Description:
+Lists all processes spawned by the shell in lexicographic order. Each entry includes:
+```
+PID Command Name State (Running or Stopped)
+```
+
+12. `Signals and Process Management`
+
+###### Description:
+`ping <pid> <signal_number>` sends a signal to a process.
+Modulo 32 logic ensures signals wrap around.
+Errors are handled if the PID doesn’t exist.
+
+###### Example:
+
+```
+ping 221 9  # Sends SIGKILL
+ping 430 47 # Sends SIGTERM (47 % 32 = 15)
+```
+
+13. `Foreground and Background Process Handling:`
+
+###### Description:
+`fg <pid>`: Brings a background process to the foreground.
+`bg <pid>`: Resumes a stopped process in the background.
+
+14. `Neonate`
+
+###### Description:
+neonate -n [time_arg]: Continuously prints the PID of the most recently created process every [time_arg] seconds until the key x is pressed.
+
+15. `Networking: iMan Command`
+
+###### Description:
+`iMan <command_name>`: Fetches man pages from the website http://man.he.net/ and prints the response.
+HTML tags are included in the output.
+If the page doesn’t exist, the response will still print the error message.
+
+###### Example:
+```
+iMan sleep    # Fetches the man page for 'sleep'
+iMan invalid_command  # Prints the 'no matches found' response.
+```
 
 ## Compilation and Execution
 To compile the shell program, use the provided Makefile:

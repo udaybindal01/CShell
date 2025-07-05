@@ -78,6 +78,12 @@ void exe_pro(pid_t pid)
 
 void pro(char *command)
 {
+    char *redir_pos = strpbrk(command, "><");
+    if (redir_pos != NULL)
+    {
+        *redir_pos = '\0';  
+    }
+    
     const char *delimiter = " ";
     char *saveptr;
     char *args = strtok_r(command, delimiter, &saveptr);

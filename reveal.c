@@ -133,6 +133,12 @@ void reveal(char *command)
     // char *args = strtok(command, " ");
     // args = strtok(NULL, " ");
 
+    char *redir_pos = strpbrk(command, "><");
+    if (redir_pos != NULL)
+    {
+        *redir_pos = '\0';  
+    }
+
     const char *delimiter = " ";
     char *saveptr;
     char *args = strtok_r(command, delimiter, &saveptr);
